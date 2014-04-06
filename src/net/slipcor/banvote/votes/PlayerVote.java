@@ -136,7 +136,6 @@ public class PlayerVote extends AVote {
 			state = voteState.POSITIVE;
 			BanVotePlugin.instance.getLogger().info(target + " tempban = " + result * Config.posMinutes);
 			commitBan(target, Math.round(result * Config.posMinutes));
-
 		} else if (result < Config.validMax) {
 			// ban failed
 			BanVotePlugin.instance.brc(Language.INFO_PLAYERVOTERESULTCLEAR.toString(type,target));
@@ -209,6 +208,8 @@ public class PlayerVote extends AVote {
 				+ target.equals(sBanTarget) + ":" + action);
 		BanVotePlugin.debug.info("committing " + type + " on " + target + " for " + iMins
 				+ " minutes");
+		BanVotePlugin.textlog.logToFile("Vote sucessfull! "+type+" on "+target+" for "+ iMins + " minutes");
+
 		if (action == 0) {
 			BanVotePlugin.instance.brc(Language.INFO_MUTINGSECONDS.toString(
 					sBanTarget,String.valueOf(iMins*60)));

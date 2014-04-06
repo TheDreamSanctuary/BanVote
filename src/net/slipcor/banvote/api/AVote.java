@@ -269,6 +269,7 @@ public abstract class AVote {
 					+ banVote.getTarget());
 
 			banVote.commitYesVote(player);
+			BanVotePlugin.textlog.logToFile(""+banVote.getVoter()+": voted yes for "+banVote.type+" "+banVote.getTarget());
 			return;
 		}
 
@@ -279,6 +280,7 @@ public abstract class AVote {
 					+ banVote.getTarget());
 
 			banVote.commitNoVote(player);
+			BanVotePlugin.textlog.logToFile(""+banVote.getVoter()+": voted no for "+banVote.type+" "+banVote.getTarget());
 			return;
 		}
 		BanVotePlugin.debug.warn("vote value check fail");
