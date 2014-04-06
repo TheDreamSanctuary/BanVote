@@ -1,11 +1,5 @@
 package net.slipcor.banvote;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,6 +13,7 @@ import net.slipcor.banvote.util.Debugger;
 import net.slipcor.banvote.util.BanVoteListener;
 import net.slipcor.banvote.util.Language;
 import net.slipcor.banvote.util.Memory;
+import net.slipcor.banvote.util.TextLogger;
 import net.slipcor.banvote.util.Updater;
 import net.slipcor.banvote.util.Tracker;
 import net.slipcor.banvote.votes.GeneralVote;
@@ -46,7 +41,7 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 	public static BanVotePlugin instance;
 	public static Set<AVote> votes = new HashSet<AVote>();
 	protected static Map<Integer, BanVoteResult> results = new HashMap<Integer, BanVoteResult>();
-	
+	public static TextLogger textlog;
 	protected final BanVoteListener listen = new BanVoteListener();
 	private Updater updater;
 	
@@ -64,6 +59,8 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 		Language.init(this);
 		
 		parseConfigs();
+		
+		textlog = new TextLogger();
 		
 		final Tracker tracker = new Tracker(this);
         tracker.start();
@@ -226,19 +223,32 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 			
 				if (pTarget.hasPermission("banvote.novote")) {
 					msg(player, Language.ERROR_VOTEPROTECTED.toString(args[0]));
+					textlog.logToFile(""+sender.getName()+": tried to voteban "+pTarget.getDisplayName()+",but he is protected.");
 					return true;
 				}
 				
 				if (!AVote.isPossible(pTarget)) {
 					BanVotePlugin.instance.msg(player,Language.INFO_VOTECOOLINGDOWN.toString(args[0]));
+					textlog.logToFile(""+sender.getName()+": tried to voteban "+pTarget.getDisplayName()+",but the cooldown is active.");
 					return true;
 				}
 			}
 			BanVotePlugin.debug.info("possibility check positive");
 			AVote vote = null;
+			
+			if (sCmd.startsWith("ban")) {
+				textlog.logToFile(""+sender.getName()+": wants to ban "+pTarget.getDisplayName()+" for " +BanVotePlugin.instance.parseStringArray(args, action));
+				
+			} else if (sCmd.startsWith("kick")) {
+				textlog.logToFile(""+sender.getName()+": wants to kick "+pTarget.getDisplayName()+" for " +BanVotePlugin.instance.parseStringArray(args, action));
+				
+			}else if (sCmd.startsWith("mute")){
+				textlog.logToFile(""+sender.getName()+": wants to mute "+pTarget.getDisplayName()+" for " +BanVotePlugin.instance.parseStringArray(args, action));
+			}
+			
 			if (bvc != null && bvc.doesIgnorePlayer()) {
 				vote = new GeneralVote(pTarget, player,
-						BanVotePlugin.instance.parseStringArray(args, action), action);
+						BanVotePlugin.instance.parseStringArray(args, action), action);	
 			} else if (Config.mute) {
 				vote = new PlayerVote(pTarget, player,
 						BanVotePlugin.instance.parseStringArray(args, action), action);
@@ -362,6 +372,7 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 			if (results.size() < 1) {
 				msg(sender, Language.INFO_NOBANS.toString());
 			}
+			textlog.logToFile(""+sender.getName()+": "+"list");
 			return true;
 		} else if (args[0].equals("reload")) {
 			// /banvote reload
@@ -369,7 +380,7 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 			parseConfigs();
 			
 			msg(sender, Language.INFO_RELOADED.toString());
-			
+			textlog.logToFile(""+sender.getName()+": "+"reload");
 			return true;
 		}
 
@@ -378,11 +389,13 @@ public class BanVotePlugin extends JavaPlugin implements IBanVotePlugin {
 			final int pos = Integer.parseInt(args[0]);
 			banPlayer = results.get(pos).getResultPlayerName();
 			BanVoteResult.remove(pos);
+			textlog.logToFile(""+sender.getName()+": "+"unbanned - "+banPlayer);
 		} catch (Exception e) {
 			msg(sender, Language.ERROR_NOTNUMERIC.toString(args[0]));
 			return true;
 		}
 		msg(sender, Language.GOOD_UNBANNED.toString(banPlayer));
+		
 		return true;
 	}
 
